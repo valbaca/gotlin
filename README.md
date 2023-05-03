@@ -62,12 +62,14 @@ fun main() = runBlocking {
 
 ## Links that were useful to me
 
-https://www.http4k.org/guide/reference/core/
-https://kotlinexpertise.com/default-map-in-kotlin/
-https://gist.github.com/Silverbaq/a14fe6b3ec57703e8cc1a63b59605876
-https://www.codejava.net/java-se/networking/java-socket-client-examples-tcp-ip
-https://sylhare.github.io/2020/04/07/Kotlin-tcp-socket-example.html
-https://medium.com/@alekseijegorov/kotlin-use-keyword-31225f80b8c0
+- [http4k reference](https://www.http4k.org/guide/reference/core/)
+- [Default map in Kotlin](https://kotlinexpertise.com/default-map-in-kotlin/)
+  - Go's Map operates like a default map where the default is the zero value of the map-value type
+- [Simple socket server in Kotlin](https://gist.github.com/Silverbaq/a14fe6b3ec57703e8cc1a63b59605876)
+- [Java Socket examples](https://www.codejava.net/java-se/networking/java-socket-client-examples-tcp-ip)
+- [Kotlin TCP example](https://sylhare.github.io/2020/04/07/Kotlin-tcp-socket-example.html)
+- [Kotlin `use` keyword](https://medium.com/@alekseijegorov/kotlin-use-keyword-31225f80b8c0)
+  - `resource.use` auto-closes the resource after the `use` block 
 
 ## License
 
