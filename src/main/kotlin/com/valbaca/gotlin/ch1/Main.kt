@@ -6,8 +6,8 @@ import java.io.InputStream
 import java.util.*
 
 fun main(args: Array<String>) {
-//    println(args.joinToString(" "))
-//    duplicateLines()
+    println(args.joinToString(" "))
+    duplicateLines()
     findDuplicateLines(args)
 }
 

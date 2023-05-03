@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("org.graalvm.buildtools.native") version "0.9.20"
     kotlin("jvm") version "1.8.20"
+    application
 }
 
 group = "com.valbaca.gotlin"
@@ -32,4 +33,8 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+application {
+    mainClass.set("com.valbaca.gotlin.ch8.Reverb1Kt")
 }

@@ -1,6 +1,7 @@
 package com.valbaca.gotlin.ch8
 
 import java.lang.Exception
+import java.lang.Thread.sleep
 import java.net.ServerSocket
 import java.net.Socket
 import java.time.LocalTime
@@ -30,6 +31,6 @@ private fun handleConn(conn: Socket) {
         val out = conn.getOutputStream()
         val formattedTime = clockFormatter.format(LocalTime.now()) + "\n"
         out.write(formattedTime.toByteArray())
-        Thread.sleep(1.toDuration(SECONDS).inWholeMilliseconds) // Notice this is `sleep` for the thread model
+        sleep(1.toDuration(SECONDS).inWholeMilliseconds) // Notice this is `sleep` for the thread model
     }
 }
