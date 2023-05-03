@@ -64,12 +64,18 @@ fun main() = runBlocking {
 
 - [http4k reference](https://www.http4k.org/guide/reference/core/)
 - [Default map in Kotlin](https://kotlinexpertise.com/default-map-in-kotlin/)
-  - Go's Map operates like a default map where the default is the zero value of the map-value type
+    - Go's Map operates like a default map where the default is the zero value of the map-value type
 - [Simple socket server in Kotlin](https://gist.github.com/Silverbaq/a14fe6b3ec57703e8cc1a63b59605876)
 - [Java Socket examples](https://www.codejava.net/java-se/networking/java-socket-client-examples-tcp-ip)
 - [Kotlin TCP example](https://sylhare.github.io/2020/04/07/Kotlin-tcp-socket-example.html)
 - [Kotlin `use` keyword](https://medium.com/@alekseijegorov/kotlin-use-keyword-31225f80b8c0)
-  - `resource.use` auto-closes the resource after the `use` block 
+    - `resource.use` auto-closes the resource after the `use` block
+
+## TODO
+
+- Do [cake.go](https://github.com/adonovan/gopl.io/blob/master/ch8/cake/cake.go). It's referenced in the book but not
+  included.
+- @ 8.5, Write a pseudo image translator: combine cpu and delay for realism.
 
 ## License
 
