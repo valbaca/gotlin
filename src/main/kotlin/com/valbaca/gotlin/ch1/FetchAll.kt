@@ -5,6 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.consumeEach
@@ -39,7 +40,7 @@ fun CoroutineScope.fetch(client: HttpClient, url: String, ch: Channel<String>) =
     try {
         val response = client.get(url)
         val n = response.body<ByteArray>().size
-        ch.send("${between(start, now()).toMillis()}ms $n $url")
+        ch.send("${between(start, now()).toMillis()}ms ${n}bytes $url")
     } catch (e: Exception) {
         ch.send("${between(start, now()).toMillis()}ms Exception ${e.message}")
     }
