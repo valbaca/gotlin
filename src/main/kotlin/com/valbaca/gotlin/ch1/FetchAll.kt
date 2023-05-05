@@ -1,12 +1,14 @@
 package com.valbaca.gotlin.ch1
 
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.get
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import org.http4k.client.ApacheClient
-import org.http4k.core.Method
-import org.http4k.core.Request
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.runBlocking
 import java.time.Duration.between
 import java.time.Instant.now
 
@@ -16,25 +18,27 @@ suspend fun main(args: Array<String>) {
         arrayOf("https://www.google.com", "https://go.dev", "https://kotlinlang.org/", "https://gopl.io", "https://www.http4k.org/")
     }
     val start = now()
+    val client = HttpClient(CIO)
     val ch = Channel<String>()
-    coroutineScope {
-        for (url in urls) {
-            fetch(url, ch)
+    runBlocking(Dispatchers.Default) {
+        launch {
+            for (url in urls) {
+                fetch(client, url, ch)
+            }
+        }.invokeOnCompletion {
+            ch.close()
         }
-        repeat(urls.size) {
-            println(ch.receive())
-        }
+
+        ch.consumeEach { println(it) }
     }
     println("${between(start, now()).toMillis()}ms elapsed")
 }
 
-fun CoroutineScope.fetch(url: String, ch: Channel<String>) = launch {
+fun CoroutineScope.fetch(client: HttpClient, url: String, ch: Channel<String>) = launch {
     val start = now()
     try {
-        val http = ApacheClient()
-        val req = Request(Method.GET, url)
-        val res = http(req)
-        val n = res.body.length!!
+        val response = client.get(url)
+        val n = response.body<ByteArray>().size
         ch.send("${between(start, now()).toMillis()}ms $n $url")
     } catch (e: Exception) {
         ch.send("${between(start, now()).toMillis()}ms Exception ${e.message}")

@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val ktor_version: String by project
+
 plugins {
     id("org.graalvm.buildtools.native") version "0.9.20"
     kotlin("jvm") version "1.8.20"
@@ -17,6 +19,9 @@ repositories {
 dependencies {
     // coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-RC")
+
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
 
     // http4k for requests and server
     implementation(platform("org.http4k:http4k-bom:4.42.1.0"))
