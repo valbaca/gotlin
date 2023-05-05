@@ -75,7 +75,8 @@ fun main() = runBlocking {
 
 - Do [cake.go](https://github.com/adonovan/gopl.io/blob/master/ch8/cake/cake.go). It's referenced in the book but not
   included.
-- @ 8.5, Write a pseudo image translator: combine cpu and delay for realism.
+- @ 8.6: first need to go back to ch5 and implement web-crawler function [crawl](https://github.com/adonovan/gopl.io/blob/master/ch5/findlinks3/findlinks.go#L38)
+- Move to using [Ktor](https://ktor.io/) for true non-blocking
 
 ## License
 
