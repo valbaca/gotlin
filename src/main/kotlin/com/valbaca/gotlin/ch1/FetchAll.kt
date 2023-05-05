@@ -4,12 +4,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.runBlocking
 import java.time.Duration.between
 import java.time.Instant.now
 
@@ -21,7 +18,7 @@ suspend fun main(args: Array<String>) {
     val start = now()
     val client = HttpClient(CIO)
     val ch = Channel<String>()
-    runBlocking(Dispatchers.Default) {
+    coroutineScope {
         launch {
             for (url in urls) {
                 fetch(client, url, ch)
