@@ -3,6 +3,7 @@ package com.valbaca.gotlin.ch8
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.consumeEach
 import java.io.File
 import java.io.IOException
 import java.lang.Thread.sleep
@@ -14,46 +15,48 @@ import kotlin.time.Duration.Companion.milliseconds
 p235
 https://github.com/adonovan/gopl.io/blob/master/ch8/thumbnail/thumbnail_test.go
  */
-fun main() {
+suspend fun main() {
     val files = listOf("profile.jpg", "cats.jpg", "meme.jpg")
     var start = now()
-    runBlocking(Dispatchers.Default) {
-        makeThumbnails2(files)
-        println("Took: ${Duration.between(start, now()).toMillis()}ms\n")
 
-        start = now()
-        makeThumbnails3(files)
-        println("Took: ${Duration.between(start, now()).toMillis()}ms\n")
+    makeThumbnails2(files)
+    println("Took: ${Duration.between(start, now()).toMillis()}ms\n")
 
-        start = now()
-        makeThumbnails4(files)
+    start = now()
+    makeThumbnails3(files)
+    println("Took: ${Duration.between(start, now()).toMillis()}ms\n")
+
+    start = now()
+    makeThumbnails4(files)
 //        makeThumbnails4((files + "error") + "home.jpg")
-        println("Took: ${Duration.between(start, now()).toMillis()}ms\n")
+    println("Took: ${Duration.between(start, now()).toMillis()}ms\n")
 
-        start = now()
-        makeThumbnails5(files)
+    start = now()
+    makeThumbnails5(files)
 //        makeThumbnails5((files + "error") + "home.jpg")
-        println("Took: ${Duration.between(start, now()).toMillis()}ms\n")
+    println("Took: ${Duration.between(start, now()).toMillis()}ms\n")
 
-        start = now()
-        val ch = Channel<String>(files.size).apply { files.forEach { send(it) } }
-        ch.close()
-        makeThumbnails6(ch)
-    }
+    start = now()
+    val ch = Channel<String>(files.size).apply { files.forEach { send(it) } }
+    ch.close()
+    makeThumbnails6(ch)
+
     println("Took: ${Duration.between(start, now()).toMillis()}ms")
 }
 
 /*
-The runBlocking does (as the name implies) block until coroutines are complete.
+Using GlobalScope launches a task that is not attached the current scope of execution.
+This method will return, but the imageFile operation can continue to execute.
 
-This is unlike Go and obviates the example in the book, which is meant to show that Go will exit the main function
-even if there are open/active goroutines.
+Additionally, the try/catch here does not do what you might expect. It will not trap exceptions
+from imageFile because the block passed to `launch` is executed concurrently.
+
 https://github.com/adonovan/gopl.io/blob/master/ch8/thumbnail/thumbnail_test.go#L30
  */
-suspend fun makeThumbnails2(filenames: List<String>) = coroutineScope {
+fun makeThumbnails2(filenames: List<String>) {
     for (f in filenames) {
         try {
-            launch { imageFile(f) } // Unlike go, we don't have to worry about loop variable capture inside launch block
+            GlobalScope.launch { imageFile(f) } // Unlike go, we don't have to worry about loop variable capture inside launch block
         } catch (e: IOException) {
             println(e)
         }
@@ -64,109 +67,55 @@ suspend fun makeThumbnails2(filenames: List<String>) = coroutineScope {
 /*
 See above for why this examples doesn't even make much sense
 https://github.com/adonovan/gopl.io/blob/master/ch8/thumbnail/thumbnail_test.go#L41
+
+The `coroutineScope` block within this method does not exit until all the `launch` jobs
+complete. If any one of the launch jobs throws an exception, the scope will be cancelled, all
+other jobs still in progress will be cancelled and the exception is propagated.
  */
 suspend fun makeThumbnails3(filenames: List<String>) = coroutineScope {
-    val ch = Channel<Any>()
     for (f in filenames) {
         launch {
             imageFile(f)            // Unlike go, we don't have to worry about loop variable capture inside launch block
-            ch.send(object {})
         }
-    }
-    println("End of for loop")
-    repeat(filenames.size) {
-        ch.receive()
     }
     println("End of makeThumbnails3")
 }
 
 /*
 https://github.com/adonovan/gopl.io/blob/master/ch8/thumbnail/thumbnail_test.go#L61
+
+This operation uses supervisorScope, which will prevent a failing launch job from cancelling the
+scope. This method will exit normally once all the launch jobs complete, even if one or more
+of them throw an exception.
  */
-suspend fun makeThumbnails4(filenames: List<String>) = coroutineScope {
-    val exceptions = Channel<Exception?>()
-    for (f in filenames) {
-        launch {
-            try {
-                imageFile(f)
-                exceptions.send(null)
-            } catch (e: Exception) {
-                exceptions.send(e)
-            }
-        }
-    }
-    repeat(filenames.size) {
-        val e = exceptions.receive()
-        if (e != null) {
-            throw e // Unlike go, this will NOT result in a coroutine leak. Per the documentation of `coroutineScope`
-            // However, if we used supervisorScope, we would need to protect against this. See makeThumbnails5
-            /* When any child coroutine in this scope fails, this scope fails and all the rest of the children are
-             cancelled (for a different behavior see supervisorScope). */
-        }
-    }
+suspend fun makeThumbnails4(filenames: List<String>) = supervisorScope {
+    filenames.forEach { launch { imageFile(it) } }
 }
 
 /*
 https://github.com/adonovan/gopl.io/blob/master/ch8/thumbnail/thumbnail_test.go#L86
+
+Unlike `launch`, which is a fire-and-forget job, `async` will return the result of the imageFile
+method. The `awaitAll` method will wait for all the jobs to complete and return a list of
+the results. The first async job that throws an exception will cause any other jobs in progress
+to be cancelled and the exception will be propagated.
  */
-suspend fun makeThumbnails5(filenames: List<String>): List<String> = supervisorScope {
-    // TIP: Consider Arrow-kt's Either https://apidocs.arrow-kt.io/arrow-core/arrow.core/-either/index.html
-    data class Item(val thumbfile: String?, val error: Exception?)
-
-
-    val ch = Channel<Item>(filenames.size)
-    for (f in filenames) {
-        launch {
-            // This imitates Go's multi-return functionality
-            val item = try {
-                Item(imageFile(f), null)
-            } catch (e: Exception) {
-                Item(null, e)
-            }
-            ch.send(item)
-        }
-    }
-    buildList {
-        repeat(filenames.size) {
-            val item = ch.receive()
-            if (item.error != null) {
-                throw item.error
-            }
-            add(item.thumbfile!!)
-        }
-    }
+suspend fun makeThumbnails5(filenames: List<String>): List<String> = coroutineScope {
+    filenames.map { async { imageFile(it) } }.awaitAll()
 }
 
 /*
 https://github.com/adonovan/gopl.io/blob/master/ch8/thumbnail/thumbnail_test.go#L117
  */
 suspend fun makeThumbnails6(filenames: ReceiveChannel<String>): Long = coroutineScope {
-    val sizes = Channel<Long>()
-    val jobs = mutableListOf<Job>()
-    // I *think* this is the Kotlin equivalent of a sync.WaitGroup. Please correct or confirm!
-    // https://github.com/adonovan/gopl.io/blob/master/ch8/thumbnail/thumbnail_test.go#L119
-    for (f in filenames) {
-        val job = launch {
-            try {
-                val thumb = imageFile(f)
-                sizes.send(stat(thumb))
-            } catch (e: Exception) {
-                throw e
-            }
+    buildList {
+        filenames.consumeEach {
+            add(async { stat(imageFile(it)) })
         }
-        jobs.add(job)
-    }
-    launch {
-        for (job in jobs) {
-            job.join() // join on the jobs rather than use a WaitGroup
-        }
-        sizes.close()
-    }
-    var total = 0L
-    for (size in sizes) {
-        total += size
-    }
-    total
+    }.awaitAll().sum()
+
+    // Alternatively, with a flow
+//    filenames.consumeAsFlow().map { stat(imageFile(it)) }.toList().sum()
 }
 
 /**
