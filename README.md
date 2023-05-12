@@ -28,12 +28,21 @@ I found Kotlin coroutines online quite lacking, so hopefully this helps improve 
 3. Coroutines are available in Kotlin
    via [`kotlinx-coroutines-core`](https://github.com/Kotlin/kotlinx.coroutines/blob/master/README.md#using-in-your-projects).
    Coroutines aren't a part of the core language like goroutines are in Go.
-4. I use [http4k](https://www.http4k.org/) as a substitute for [Go net/http](https://pkg.go.dev/net/http) for requests
-   and server
+4. I first used [http4k](https://www.http4k.org/) as a substitute for [Go net/http](https://pkg.go.dev/net/http) for requests and server. Later on I started using [Ktor](https://ktor.io/)
 
 Of course: if you've got suggestions, please create Pull Requests!
 
-## Coroutine extension pattern
+## Things I've learned
+
+1. See the Coroutine extension pattern below
+2. Kotlin's Channels throw exceptions if read from after close. Go's channels return zero-value.
+3. Kotlin's `select` is implemented as a DSL and has some differences from Go's `select`:
+    - If multiple cases are valid, Kotlin biases toward the first whereas Go will pick at random.
+    - Kotlin's `select` doesn't have a `default`
+4. Rather than using `object{}` which is akin to Go's `struct{}{}`, Kotlin can instead use `Unit` for channels that only process signals without any content.
+5. Kotlin has `whileSelect` which replaces Go's `for { select {` infinite-loop pattern.
+
+### Coroutine extension pattern
 
 I learned this pattern from: [Kotlin Coroutines in Practice](https://www.youtube.com/watch?v=a3agLJQ6vt8). In-fact, that
 talk directly inspired me to work on this.
@@ -70,13 +79,7 @@ fun main() = runBlocking {
 - [Kotlin TCP example](https://sylhare.github.io/2020/04/07/Kotlin-tcp-socket-example.html)
 - [Kotlin `use` keyword](https://medium.com/@alekseijegorov/kotlin-use-keyword-31225f80b8c0)
     - `resource.use` auto-closes the resource after the `use` block
-
-## TODO
-
-- Do [cake.go](https://github.com/adonovan/gopl.io/blob/master/ch8/cake/cake.go). It's referenced in the book but not
-  included.
-- @ 8.6: first need to go back to ch5 and implement web-crawler function [crawl](https://github.com/adonovan/gopl.io/blob/master/ch5/findlinks3/findlinks.go#L38)
-- Move to using [Ktor](https://ktor.io/) for true non-blocking
+- [Ktor](https://ktor.io/)
 
 ## License
 
