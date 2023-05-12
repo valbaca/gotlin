@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.selects.whileSelect
 import kotlinx.coroutines.supervisorScope
 import java.io.File
 
@@ -48,20 +49,19 @@ suspend fun main(args: Array<String>): Unit = coroutineScope {
     val tick = if (verbose) ticker(500L) else Channel()
     var nfiles = 0L
     var nbytes = 0L
-    var stop = false
-    while (!stop) {
-        select {
-            fileSizes.onReceiveCatching {
-                if (it.isSuccess) {
-                    nfiles++
-                    nbytes += it.getOrThrow()
-                } else {
-                    stop = true
-                }
+    whileSelect {
+        fileSizes.onReceiveCatching {
+            if (it.isSuccess) {
+                nfiles++
+                nbytes += it.getOrThrow()
+                true
+            } else {
+                false
             }
-            tick.onReceive {
-                printDiskUsage(nfiles, nbytes)
-            }
+        }
+        tick.onReceive {
+            printDiskUsage(nfiles, nbytes)
+            true
         }
     }
     printDiskUsage(nfiles, nbytes)
