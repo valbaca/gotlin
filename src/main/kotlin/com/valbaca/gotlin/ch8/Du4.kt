@@ -1,6 +1,7 @@
 package com.valbaca.gotlin.ch8
 
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -8,10 +9,24 @@ import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
 import java.io.File
 
-suspend fun walkDirSema(dir: File, fileSizes: Channel<Long>) {
-    for (entry in direntsSema(dir)) {
+val done = Channel<Unit>()
+
+/*
+Kotlin doesn't have a `default` in `select` so instead we use a blocking `when` with else
+Also, Kotlin's Channels throw errors if they're read after they're closed.
+Go's channels return zero values if they're read after close.
+So to use a Kotlin channel as a broadcast, need to check `isClosedForReceive` (but even this is sketchy even though it works)
+*/
+fun cancelled() = when {
+    done.isClosedForReceive -> true
+    else -> false
+}
+
+suspend fun walkDirSemaCancellable(dir: File, fileSizes: Channel<Long>) {
+    if (cancelled()) return
+    for (entry in direntsSemaCancellable(dir)) {
         if (entry.isDirectory) {
-            walkDirSema(entry, fileSizes)
+            walkDirSemaCancellable(entry, fileSizes)
         }
         fileSizes.send(entry.length())
     }
@@ -19,10 +34,14 @@ suspend fun walkDirSema(dir: File, fileSizes: Channel<Long>) {
 
 private val sema = Channel<Unit>(20)
 
-suspend fun direntsSema(dir: File): List<File> {
+suspend fun direntsSemaCancellable(dir: File): List<File> {
     sema.send(Unit)
     return try {
-        dir.listFiles()?.toList() ?: emptyList()
+        if (cancelled()) {
+            emptyList()
+        } else {
+            dir.listFiles()?.toList() ?: emptyList()
+        }
     } catch (e: Exception) {
         return emptyList()
     } finally {
@@ -34,12 +53,19 @@ suspend fun main(args: Array<String>): Unit = coroutineScope {
     val argList = args.toList()
     val verbose = "-v" in argList
     val roots = argList.filter { it != "-v" }.ifEmpty { listOf(".") }
+
+    // Cancel traversal when input is detected
+    launch {
+        System.`in`.read()
+        done.close()
+    }
+
     val fileSizes = Channel<Long>()
     launch {
         // supervisor scope plays the equivalent role as sync.WaitGroup
         supervisorScope {
             for (root in roots) {
-                launch { walkDirSema(root.toFile(), fileSizes) }
+                launch { walkDirSemaCancellable(root.toFile(), fileSizes) }
             }
         }
         fileSizes.close()
@@ -50,7 +76,12 @@ suspend fun main(args: Array<String>): Unit = coroutineScope {
     var nbytes = 0L
     var stop = false
     while (!stop) {
-        select {
+        select<Unit> {
+            done.onReceive {
+                // Drain fileSizes to allow existing coroutines to finish
+                fileSizes.consumeEach { /* do nothing */ }
+                stop = true
+            }
             fileSizes.onReceiveCatching {
                 if (it.isSuccess) {
                     nfiles++

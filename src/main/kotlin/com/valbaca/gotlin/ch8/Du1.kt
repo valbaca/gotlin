@@ -5,11 +5,8 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
-import kotlin.io.path.Path
 
-private fun String.toFile() = Path(this).toFile()
-
-private suspend fun walkDir(dir: File, fileSizes: Channel<Long>) {
+suspend fun walkDir(dir: File, fileSizes: Channel<Long>) {
     for (entry in dirents(dir)) {
         if (entry.isDirectory) {
             walkDir(entry, fileSizes)
@@ -18,7 +15,7 @@ private suspend fun walkDir(dir: File, fileSizes: Channel<Long>) {
     }
 }
 
-private fun dirents(dir: File): List<File> {
+fun dirents(dir: File): List<File> {
     return try {
         dir.listFiles()?.toList() ?: emptyList()
     } catch (e: Exception) {
@@ -41,5 +38,5 @@ suspend fun main(args: Array<String>): Unit = coroutineScope {
         nfiles++
         nbytes += size
     }
-    println("$nfiles files ${"%.1f".format(nbytes.toFloat()/1e6)}MB ")
+    println("$nfiles files ${"%.1f".format(nbytes.toFloat() / 1e6)}MB ")
 }

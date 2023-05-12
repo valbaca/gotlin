@@ -1,33 +1,11 @@
 package com.valbaca.gotlin.ch8
 
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import java.io.File
-import kotlin.io.path.Path
 
-private fun String.toFile() = Path(this).toFile()
-
-private suspend fun walkDir(dir: File, fileSizes: Channel<Long>) {
-    for (entry in dirents(dir)) {
-        if (entry.isDirectory) {
-            walkDir(entry, fileSizes)
-        }
-        fileSizes.send(entry.length())
-    }
-}
-
-private fun dirents(dir: File): List<File> {
-    return try {
-        dir.listFiles()?.toList() ?: emptyList()
-    } catch (e: Exception) {
-        return emptyList()
-    }
-}
 
 suspend fun main(args: Array<String>): Unit = coroutineScope {
     val argList = args.toList()
@@ -45,7 +23,7 @@ suspend fun main(args: Array<String>): Unit = coroutineScope {
     var nfiles = 0L
     var nbytes = 0L
     var stop = false
-    while(!stop) {
+    while (!stop) {
         select {
             fileSizes.onReceiveCatching {
                 if (it.isSuccess) {
