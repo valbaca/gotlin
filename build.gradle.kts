@@ -23,6 +23,12 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
 
+    // skrape{it} for html parsing
+    implementation("it.skrape:skrapeit:1.1.5")
+    implementation("it.skrape:skrapeit-http-fetcher:1.1.5")
+    implementation("it.skrape:skrapeit-browser-fetcher:1.1.5")
+    implementation("it.skrape:skrapeit-async-fetcher:1.1.5")
+
     // http4k for requests and server
     implementation(platform("org.http4k:http4k-bom:4.42.1.0"))
     implementation("org.http4k:http4k-core")
