@@ -2,7 +2,7 @@ package com.valbaca.gotlin.ch8
 
 import kotlinx.coroutines.channels.ticker
 
-private fun launch() {
+private fun launchRocket() {
     println("🌍 🚀 🌔")
 }
 
@@ -13,5 +13,5 @@ suspend fun main() {
         println(countdown)
         tick.receive()
     }
-    launch()
+    launchRocket()
 }

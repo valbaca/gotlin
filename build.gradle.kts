@@ -20,8 +20,16 @@ dependencies {
     // coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-RC")
 
+    // ktor for non-blocking client & server
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-status-pages-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-default-headers-jvm:$ktor_version")
+    // tcp
+    implementation("io.ktor:ktor-network:$ktor_version")
+
 
     // skrape{it} for html parsing
     implementation("it.skrape:skrapeit:1.1.5")
