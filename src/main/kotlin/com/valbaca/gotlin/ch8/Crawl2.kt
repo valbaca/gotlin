@@ -3,7 +3,6 @@ package com.valbaca.gotlin.ch8
 import com.valbaca.gotlin.ch5.extractLinks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -39,7 +38,7 @@ fun main(args: Array<String>) = runBlocking(Dispatchers.IO) {
             if (link !in seen) {
                 seen.add(link)
                 n++
-                launch { worklist.send(crawl(link))}
+                launch { worklist.send(crawl(link)) }
             }
         }
     }

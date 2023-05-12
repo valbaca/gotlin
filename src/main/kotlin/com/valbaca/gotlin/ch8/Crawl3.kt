@@ -25,7 +25,7 @@ fun main(args: Array<String>) = runBlocking(Dispatchers.IO) {
 
     repeat(20) {
         launch {
-            unseenLinks.consumeEach {link ->
+            unseenLinks.consumeEach { link ->
                 val foundLinks = crawl(link)
                 launch {
                     worklist.send(foundLinks)

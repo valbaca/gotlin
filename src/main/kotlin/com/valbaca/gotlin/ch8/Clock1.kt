@@ -1,6 +1,5 @@
 package com.valbaca.gotlin.ch8
 
-import java.lang.Exception
 import java.lang.Thread.sleep
 import java.net.ServerSocket
 import java.net.Socket
