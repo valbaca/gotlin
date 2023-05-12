@@ -13,12 +13,16 @@ private fun launchRocket() {
 
 /*
 TIP: When writing `select`, to help the IDE, might start with `select<Unit>` and then remove the `<Unit>` once you're done with the select block.
+
+Using `Channel<Unit>` for the signal channels, aka event channels or sychronization channels.
+It's obvious and terse to indicate the channel is just for indications. Also saves allocations b/c there's only one Unit.
+In Go, it's often `chan struct{}` or `chan int` or `chan bool`
  */
 suspend fun main() = coroutineScope {
-    val abort = Channel<Any>()
+    val abort = Channel<Unit>()
     launch {
         System.`in`.read(ByteArray(1)) // read a single byte
-        abort.send(object {})
+        abort.send(Unit)
     }
 
     println("Commencing countdown. Press return to abort.")

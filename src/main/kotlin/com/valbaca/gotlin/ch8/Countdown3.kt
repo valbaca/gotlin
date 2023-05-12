@@ -11,10 +11,10 @@ private fun launchRocket() {
 }
 
 suspend fun main() = coroutineScope {
-    val abort = Channel<Any>()
+    val abort = Channel<Unit>()
     launch {
         System.`in`.read(ByteArray(1)) // read a single byte
-        abort.send(object {})
+        abort.send(Unit)
     }
     println("Commencing countdown. Press return to abort.")
     val mainScope = this
