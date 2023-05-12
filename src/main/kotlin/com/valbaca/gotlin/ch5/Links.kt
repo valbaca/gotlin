@@ -1,7 +1,6 @@
 package com.valbaca.gotlin.ch5
 
 import it.skrape.core.htmlDocument
-import it.skrape.fetcher.AsyncFetcher
 import it.skrape.fetcher.BrowserFetcher
 import it.skrape.fetcher.response
 import it.skrape.fetcher.skrape
@@ -19,31 +18,14 @@ suspend fun main() = runBlocking(Dispatchers.Default) {
     }
 }
 
+/**
+ * Given a web-page's `url`, returns a deduped-list of all the urls on the page.
+ * (Any relative links are turned into absolute urls)
+ */
 suspend fun extractLinks(url: String): List<String> {
     val links = skrape(BrowserFetcher) {
-        request {
-            this.url = url
-        }
-        response {
-            htmlDocument {
-                a {
-                    findAll {
-                        eachHref
-                    }
-                }
-            }
-        }
+        request { this.url = url }
+        response { htmlDocument { a { findAll { eachHref } } } }
     }
-
-    return links
-}
-
-fun forEachNode(
-    node: Any,
-    pre: (Any) -> Unit = {},
-    post: (Any) -> Unit = {}
-) {
-    pre(node)
-    // for node in children
-    post(node)
+    return links.map { if (it.startsWith("/")) url + it else it }.toSet().toList()
 }
